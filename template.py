@@ -4,17 +4,26 @@ from pathlib import Path
 project_name = "src"
 
 list_of_files = [
-    f"{project_name}/constants/__init__.py",
     f"{project_name}/components/__init__.py",
     f"{project_name}/components/groq_handler.py",
     f"{project_name}/components/resume_analyzer.py",
     f"{project_name}/components/text_processor.py",
     f"{project_name}/exception/__init__.py",
     f"{project_name}/logger/__init__.py",
+    f"{project_name}/utils/__init__.py",
+    f"{project_name}/utils/config.py",
+    f"{project_name}/utils/file_utils.py",
+    f"{project_name}/utils/logger.py",
+    f"{project_name}/utils/prompt_loader.py",
+    ".github/workflows/ci-cd.yml",
+    ".env",
+    ".dockerignore",
+    ".project-root",
+    "lambda_handler.py",
+    "prompts/prompts.json",
     "app.py",
     "requirements.txt",
     "Dockerfile",
-    "runPipeline.py",
     "setup.py",
     "pyproject.toml",
     "testEnvironment.py"
