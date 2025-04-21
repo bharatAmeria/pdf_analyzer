@@ -1,0 +1,47 @@
+name: CI/CD Pipeline for Resume Analyzer
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.11
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Run tests
+      run: |
+        pytest tests/
+
+    - name: Log in to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build and push Docker image to ECR
+      run: |
+        docker build -t resume-analyzer .
+        docker tag resume-analyzer:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/resume-analyzer:latest
+        docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/resume-analyzer:latest
+
+    - name: Deploy to AWS Lambda
+      run: |
+        aws lambda update-function-code \
+          --function-name resume-analyzer-fn \
+          --image-uri $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/resume-analyzer:latest \
+          --region $AWS_REGION

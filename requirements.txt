@@ -1,0 +1,8 @@
+streamlit
+groq
+pymupdf
+python-docx
+python-dotenv
+from-root
+mangum
+-e .
