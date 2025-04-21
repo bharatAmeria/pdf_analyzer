@@ -81,7 +81,7 @@ GROQ_API_KEY=your_key_here
 
 #### **Now our main forcus is on serverless deployment using lambda-function**
 
-### STEP 2: Create Dockerfile add 
+### STEP 3: Create Dockerfile
 
 ```  bash
 FROM python:3.11-slim
@@ -99,6 +99,13 @@ CMD ["streamlit", "run", "app.py"]
 
 ```
 - The above configuration specifically to build and test docker image locally. If it is working properly.
+- To build loaclly launch your Docker desktop.
+- In terminal give command 
+``` bash
+
+docker build -t streamlit-test . 
+docker run --env-file .env -p 8501:8501 streamlit-test
+```
 
 ```  bash
 FROM public.ecr.aws/lambda/python:3.11
@@ -118,8 +125,127 @@ CMD ["app.main.lambda_handler"]
 
 - public.ecr.aws/lambda/python:3.11 -> This python image lambda function specific only.
 - app.main.lambda_handler -> This command looks for and invokes when the service triggers your Lambda function.
+- The code for lambda_handler in lambda_handler.py  
 
+### STEP 4: AWS IAM user
 
+- Log in to the AWS Management Console.
+- Go to IAM (search for IAM in the Services menu). In the left sidebar, click Users.
+- Click the "Add users" button.
+- Enter a username.
+- Select Access type:
+   ✅ Programmatic access -> if you want access via CLI, SDK, etc.
+   ✅ AWS Management Console access -> if the user needs to sign in to the AWS console.
+- Set Console password (auto-generated or custom).Click Next: Permissions.
+- Choose how to assign permissions:
+- Attach existing policies directly (e.g., AdministratorAccess, AmazonS3FullAccess, etc.). Give AdministratorAccess if you are new user.
+- Or add to a group with pre-defined policies (Optional) Add tags (key-value pairs).
+- Click Next: Review. Click Create user.
+
+Note .:- ✅ After Creation
+- Download Save the Access Key ID and Secret Access Key (if programmatic access was selected).
+
+### STEP 5: ECR (Elastic Contioner Registry). Docker for AWS
+
+- Navigate to Elastic Container Registry (ECR) (search for it in Services).
+- In the left sidebar, click Repositories.
+- Click "Create repository".
+- Choose Private or Public (usually Private).
+- Enter a repository name. (Optional) Configure settings:
+- Enable tag immutability, image scanning, or encryption as needed.
+- Click Create repository.
+
+✅ Authenticate Docker with ECR (using AWS CLI)
+- Make sure AWS CLI and Docker are installed.If not
+  1. Install AWS CLI (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html).
+  2. open terminal paste command.
+  ```bash  
+  aws configure
+  ```
+  3. Give Access Key ID and Secret Access Key. All other parameter as default.
+
+- Run this to authenticate Docker with ECR: 
+  ```bash
+  aws ecr get-login-password --region <your-region> | docker login --username AWS --password-stdin <account-id>.dkr.ecr.<your-region>.amazonaws.com
+  ```
+
+  Note .:- Replace: 
+           <your-region> → e.g.(us-east-1)
+           <account-id> → your AWS account ID
+
+- Tag and Push Docker Image to ECR
+   - Build your Docker image (if not done already):
+      ```bash
+      docker build -t your-image-name .
+      ```
+   - Tag the image with your ECR repo URI:
+      ```bash
+      docker tag your-image-name:latest <account-id>.dkr.ecr.<region>.amazonaws.com/your-repo-name
+      ```
+   - Push the image to ECR:
+      ```bash
+      docker push <account-id>.dkr.ecr.<region>.amazonaws.com/your-repo-name
+      ```
+
+### STEP 6: AWS Lambda.
+
+- Go to AWS Lambda service.
+- Click Create function.
+- Choose: Container image
+- Give Function name.
+- Container image URI (paste your ECR image URI)
+- Set Execution Role (you can let AWS create one or use existing)
+- Click Create function
+
+Or other way is using AWS CLI.
+
+```bash
+aws lambda create-function \
+  --function-name my-lambda-container-func \
+  --package-type Image \
+  --code ImageUri=<your-ecr-image-uri> \
+  --role arn:aws:iam::<account-id>:role/<your-lambda-execution-role>
+```
+
+Note .:- Replace: <your-ecr-image-uri> = your ECR image URI
+                  <account-id> = your AWS Account ID 
+                  <your-lambda-execution-role> = IAM role with Lambda permissions (like AWSLambdaBasicExecutionRole)
+
+#### ✅ Test Your Lambda
+- Go to Lambda Console → your function → Test.
+- Configure a test event → click Test.
+- View logs/output in CloudWatch Logs.
+
+#### Update Lambda with new image:
+If you push a new version of the image to ECR:
+```bash
+aws lambda update-function-code \
+  --function-name my-lambda-container-func \
+  --image-uri <your-updated-ecr-image-uri>
+```
+
+### STEP 7: AWS API Gateway.
+
+1. Go to AWS Console > API Gateway
+   - In the AWS Console, search for and open API Gateway.
+   - Choose “HTTP API” (simpler and faster than REST API).
+   - Click Create API.
+
+2. Create a New HTTP API
+   - Choose "Build" under HTTP API.
+   - Under Integrations, click Add integration → choose Lambda function.
+   - Select your Lambda function from the list.
+   - Click Next.
+
+3. Configure Routes
+   - Define a route:
+   - Method: ANY or specific (GET, POST, etc.)
+   - Resource path: / or /your-path
+   - Click Next.
+
+4. Deploy the API
+   - Create a new Stage (e.g., prod).
+   - Click Next and then Create.
 
 ## Running the Application
 1. Ensure all dependencies are installed: ```pip install -r requirements.txt```
