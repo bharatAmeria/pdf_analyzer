@@ -1,18 +1,18 @@
 from src.logger import logging
 from src.exception import MyException
-from src.utils.prompt_loader import PromptLoader
 
 class ResumeAnalyzer:
     """Class to analyze resumes using GroqHandler."""
-    def __init__(self, groq_handler):
+    def __init__(self, groq_handler, prompt_loader):
         self.grok = groq_handler
+        self.prompt_loader = prompt_loader
 
     def analyze_resume(self, text, designation, experience, domain):
         """Analyze resume text."""
         logging.debug("Starting resume analysis for designation: %s, experience: %s, domain: %s",
                          designation, experience, domain)
         try:
-            prompt = PromptLoader.get_prompt(
+            prompt = self.prompt_loader.get_prompt(
                 "resume_analysis",
                 designation=designation,
                 experience=experience,

@@ -1,0 +1,16 @@
+.git
+.github
+tests
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+sample_resume.pdf
+.env
+*.md
+LICENSE
+README.md
+template.py
+testEnvironment.py
+.github/
+.DS_Store

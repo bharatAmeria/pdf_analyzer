@@ -11,6 +11,7 @@ from src.components.resume_analyzer import ResumeAnalyzer
 from src.utils.file_utils import save_text_to_file, remove_file
 from src.utils.logger import setup_logger
 from src.utils.config import Config
+from src.utils.prompt_loader import PromptLoader
 
 # Singleton logger setup (runs only once)
 if 'loggers' not in st.session_state:
@@ -37,7 +38,7 @@ def get_text_processor():
 
 @st.cache_resource
 def get_resume_analyzer(_grok_handler):
-    return ResumeAnalyzer(_grok_handler)
+    return ResumeAnalyzer(_grok_handler, PromptLoader(Config.PROMPTS_FILE))
 
 # Initialize components (cached)
 grok_handler = get_grok_handler()
