@@ -5,9 +5,9 @@ on:
     branches:
       - main
 
-env:
-  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-  AWS_REGION: ${{ secrets.AWS_REGION }}
+# env:
+#   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+#   AWS_REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
   build-and-deploy:
@@ -30,18 +30,18 @@ jobs:
       run: |
         pytest tests/
 
-    - name: Log in to Amazon ECR
-      uses: aws-actions/amazon-ecr-login@v1
+    # - name: Log in to Amazon ECR
+    #   uses: aws-actions/amazon-ecr-login@v1
 
-    - name: Build and push Docker image to ECR
-      run: |
-        docker build -t resume-analyzer .
-        docker tag resume-analyzer:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/resume-analyzer:latest
-        docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/resume-analyzer:latest
+    # - name: Build and push Docker image to ECR
+    #   run: |
+    #     docker build -t resume-analyzer .
+    #     docker tag resume-analyzer:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/resume-analyzer:latest
+    #     docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/resume-analyzer:latest
 
-    - name: Deploy to AWS Lambda
-      run: |
-        aws lambda update-function-code \
-          --function-name resume-analyzer-fn \
-          --image-uri $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/resume-analyzer:latest \
-          --region $AWS_REGION
+    # - name: Deploy to AWS Lambda
+    #   run: |
+    #     aws lambda update-function-code \
+    #       --function-name resume-analyzer-fn \
+    #       --image-uri $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/resume-analyzer:latest \
+    #       --region $AWS_REGION
